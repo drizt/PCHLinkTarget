@@ -1,0 +1,32 @@
+git:
+  depth: 1
+  quiet: true
+
+language: cpp
+
+matrix:
+  include:
+    - {name: "Ubuntu 14.04 Make",  os: "linux", dist: "trusty",  compiler: "gcc", addons: {apt: {packages: "qtbase5-dev"}}, env: "GENERATOR=\"Unix Makefiles\""}
+    - {name: "Ubuntu 14.04 Ninja", os: "linux", dist: "trusty",  compiler: "gcc", addons: {apt: {packages: "qtbase5-dev ninja-build"}}, env: "GENERATOR=Ninja"}
+    - {name: "Ubuntu 16.04 Make",  os: "linux", dist: "xenial",  compiler: "gcc", addons: {apt: {packages: "qtbase5-dev"}}, env: "GENERATOR=\"Unix Makefiles\""}
+    - {name: "Ubuntu 16.04 Ninja", os: "linux", dist: "xenial",  compiler: "gcc", addons: {apt: {packages: "qtbase5-dev ninja-build"}}, env: "GENERATOR=Ninja"}
+    - {name: "macOS Make",  os: "osx", addons: {homebrew: {packages: "qt5"}}, env: "GENERATOR=\"Unix Makefiles\""}
+    - {name: "macOS Ninja", os: "osx", addons: {homebrew: {packages: ["qt5", "ninja"]}}, env: "GENERATOR=Ninja"}
+
+script:
+  - |
+    if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+      cmake -G "$GENERATOR"                  \
+            -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+            -DCMAKE_BUILD_TYPE=Debug
+      cmake --build .
+    fi
+  - |
+    if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      cmake -G "$GENERATOR"                  \
+            -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+            -DCMAKE_BUILD_TYPE=Debug         \
+            -DCMAKE_PREFIX_PATH=$(brew --prefix qt5)
+      cmake --build .
+    fi
+ 
