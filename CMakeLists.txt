@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
+project(PCHLinkTarget NONE)
+
 add_subdirectory(examples/widgets-qt5)
 
 # collect_info_files function
