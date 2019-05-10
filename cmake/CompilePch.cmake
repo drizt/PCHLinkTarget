@@ -36,6 +36,9 @@ function(compile_pch args pch_path gch_path lang_header binary_dir)
     message("Building PCH object ${gch_path}")
     execute_process(COMMAND ${args} WORKING_DIRECTORY ${binary_dir})
     set(WORKING_DIR ${COMMANDS_${I}.directory})
+
+    # Workaround for https://bugreports.qt.io/browse/QTCREATORBUG-22427
+    execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${pch_path} ${gch_dir})
 endfunction()
 
 # Check all required variables is set

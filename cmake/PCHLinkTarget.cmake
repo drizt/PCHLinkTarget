@@ -1,8 +1,11 @@
 set(_current_list_dir ${CMAKE_CURRENT_LIST_DIR})
 
 function(pch_link_target target pch_header)
-    # Force to check correct pch header
-    target_compile_options(${target} PUBLIC "-Winvalid-pch")
+#    # Force to check correct pch header
+#    target_compile_options(${target} PUBLIC "-Winvalid-pch")
+
+    # Workaround for https://bugreports.qt.io/browse/QTCREATORBUG-22427
+    target_compile_options(${target} PUBLIC "-Wno-invalid-pch")
 
     # Write actual compile command to json file
     set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE PARENT_SCOPE)
