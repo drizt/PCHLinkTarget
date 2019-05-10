@@ -57,7 +57,6 @@ function(compile_pch args pch_path gch_path lang_header binary_dir)
     execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${gch_path})
     execute_process(COMMAND ${args} WORKING_DIRECTORY ${binary_dir})
     if (clang_args)
-        message("${clang_app} ${clang_args}")
         execute_process(COMMAND ${clang_app} ${clang_args} WORKING_DIRECTORY ${binary_dir})
     endif()
 
