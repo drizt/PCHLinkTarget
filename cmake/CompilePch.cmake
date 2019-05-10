@@ -29,16 +29,38 @@ function(compile_pch args pch_path gch_path lang_header binary_dir)
 
     string(REPLACE "-include;${include_gch}" "" args "${args}")
 
-    list(APPEND args -x ${lang_header} -c ${pch_path} -o ${gch_path})
+    # Check for clang
+    if(lang_header STREQUAL c++-header)
+        execute_process(COMMAND ${args} -c ${CMAKE_CURRENT_LIST_DIR}/check-clang.cpp WORKING_DIRECTORY ${binary_dir} RESULT_VARIABLE check_clang_result ERROR_QUIET)
+    else()
+        execute_process(COMMAND ${args} -c ${CMAKE_CURRENT_LIST_DIR}/check-clang.c WORKING_DIRECTORY ${binary_dir} RESULT_VARIABLE check_clang_result ERROR_QUIET)
+    endif()
+    if(check_clang_result)
+        if(lang_header STREQUAL c++-header)
+            find_program(clang_app clang++)
+        else()
+            find_program(clang_app clang)
+        endif()
+        if(clang_app)
+            set(clang_args ${args} -x ${lang_header} -c ${pch_path} -o ${gch_path}/clang-gch)
+            list(REMOVE_AT clang_args 0)
+        endif()
+    else()
+        execute_process(COMMAND ${CMAKE_COMMAND} -E remove -f ${binary_dir}/a.out)
+    endif()
+
+    list(APPEND args -x ${lang_header} -c ${pch_path} -o ${gch_path}/gch)
 
     get_filename_component(gch_dir ${gch_path} DIRECTORY)
     file(MAKE_DIRECTORY ${gch_dir})
     message("Building PCH object ${gch_path}")
+    execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${gch_path})
     execute_process(COMMAND ${args} WORKING_DIRECTORY ${binary_dir})
-    set(WORKING_DIR ${COMMANDS_${I}.directory})
+    if (clang_args)
+        message("${clang_app} ${clang_args}")
+        execute_process(COMMAND ${clang_app} ${clang_args} WORKING_DIRECTORY ${binary_dir})
+    endif()
 
-    # Workaround for https://bugreports.qt.io/browse/QTCREATORBUG-22427
-    execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${pch_path} ${gch_dir})
 endfunction()
 
 # Check all required variables is set
@@ -72,7 +94,7 @@ file(READ ${COMPILE_COMMANDS_PATH} COMPILE_COMMANDS_TEXT)
 # Check GCH file updated
 get_filename_component(PCH_NAME ${PCH} NAME)
 set(GSH_PATH CMakeFiles/${TARGET}_pch.dir/${PCH_NAME}.gch)
-if(NOT (${PCH_PATH} IS_NEWER_THAN ${CURRENT_BINARY_DIR}/${GSH_PATH}))
+if(NOT (${PCH_PATH} IS_NEWER_THAN ${CURRENT_BINARY_DIR}/${GSH_PATH}/gch))
     return()
 endif()
 
